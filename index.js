@@ -1,3 +1,5 @@
+//required modules: node-expat, node-inflow, find the require of them and fix the paths
+
 var self=this;
 function search_agent(agent)
 {
