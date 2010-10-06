@@ -1,21 +1,60 @@
 //required modules: node-expat, node-inflow, find the require of them and fix the paths
+
+require.paths.push(__dirname+'/../'); // here is my mouls arae located, /root_folder/deps/modulename
+
 var mongodb=require('./mongodb');
-var expatparser=require('../node-expat').parser;
+var expatparser=require('node-expat').parser;
+var merger=require('nodejs-clone-extend/merger');
 
 var self=this;
 
+self.collection=null; // set it after initalization
 
+
+
+function findspecs(agent,callback)
 {
- collection.findOne({'id':id}, function(err, docu) { 
-  callback(docu || false ); 
+ mongodb.findagent(self.collection,agent,function(device)
+ {
+  if(device===false) callback(false);
+  else if(device.fall_back===undefined) callback(device);
+  else
+  {
+   var devices=[];
+   findspecs_whileloop(devices,device.fall_back,function ()
+   {
+    console.log('len='+devices.length);
+    var resultdevice=devices[devices.length-1];
+    for(var i=devices.length-2;i>-1;i--)
+    {
+     merger.extend(resultdevice,devices[i]); // maybe to limit it to two first levels: the groups and the capabilities
+    }
+    callback(resultdevice);
+   }); 
+  }
  });
-});this.findid=findid;
+};this.findspecs=findspecs;
 
-findagent(collection,agent,callback)
+function findspecs_whileloop(devices,id,callback)
+{
+ mongodb.findid(self.collection,id,function(device)
+ {
+  if(device!==false)devices.push(device);
+  if(device.fall_back!==undefined)
+  {
+   findspecs_whileloop(devices,device.fall_back,callback);
+  }
+  else
+  {
+   callback();
+  }
+ });   
+}
+//todo: develop option to search backwards from capability to device
 
-this.findagent=mongodb.findagent; //mongodb.findid(collection,id,callback)
-this.findid=mongodb.findid;
-
+//this.findagent=mongodb.findagent; //mongodb.findid(collection,id,callback)
+//this.findid=mongodb.findid;
+  
 function loadxml(callback)
 {
  require('fs').readFile(__dirname+'/wurfl-latest.xml', 'utf-8',function (err, data) {
@@ -102,3 +141,22 @@ function update(callback)
   });
  });
 }this.update=update;
+//update(); // uncomment this and execute: node index.js
+
+function test()
+{
+ mongodb.connect("t999_phonespecs",function (collection,db)
+ {
+  self.collection=collection;
+  mongodb.index(self.collection,function (){
+    findspecs("Mozilla/5.0 (Linux; U; Android 2.2; en-us; PC36100 Build/FRF91) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1",function(device){
+      console.log(require('sys').inspect(device.group));
+      
+      ///Math.min(device.group.display.max_image_width,device.group.display.resolution_width)
+      //Math.min(device.group.display.max_image_height,device.group.display.resolution_height)
+      db.close();
+    });
+  });
+ });
+};this.test=test;
+//test();

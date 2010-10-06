@@ -1,4 +1,5 @@
-var mongo = require('../node-mongodb-native/lib/mongodb');
+
+var mongo = require('node-mongodb-native/lib/mongodb');
   
 var app={
  database:{
@@ -39,14 +40,22 @@ function findid(collection,id,callback)
  collection.findOne({'id':id}, function(err, docu) { 
   callback(docu || false ); 
  });
-});this.findid=findid;
+};this.findid=findid;
+
+// maybe add mongodb option slice to group.display if i need only display
+function find(collection,search,callback)
+{
+ collection.findOne(search, function(err, docu) { 
+  callback(docu || false ); 
+ });
+};this.find=find;
 
 function findagent(collection,agent,callback)
 {
  collection.findOne({'user_agent':agent}, function(err, docu) { 
   callback(docu || false ); 
  });
-});this.findagent=findagent;
+};this.findagent=findagent;
 
 function savereplace(collection,search,object,callback)
 {
@@ -80,6 +89,15 @@ function savereplace(collection,search,object,callback)
   });
  });
 };this.savereplace=savereplace;
+
+function index(collection,callback)
+{
+ collection.createIndex([['agent']],function(err, indexName){
+  collection.createIndex([['id']],function(err, indexName){
+   callback();
+  });
+ });
+};this.index=index;
 
 function connect(collectionname,callback)
 {
