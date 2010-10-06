@@ -34,6 +34,20 @@ function db_open_auth(callback)
  }
 }
 
+function findid(collection,id,callback)
+{
+ collection.findOne({'id':id}, function(err, docu) { 
+  callback(docu || false ); 
+ });
+});this.findid=findid;
+
+function findagent(collection,agent,callback)
+{
+ collection.findOne({'user_agent':agent}, function(err, docu) { 
+  callback(docu || false ); 
+ });
+});this.findagent=findagent;
+
 function savereplace(collection,search,object,callback)
 {
  collection.find(search,function (error,cursor){
