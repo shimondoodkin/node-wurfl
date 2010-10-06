@@ -300,7 +300,7 @@ this.stringify=stringify;
 function save( object, filename, callback )
 {
  if(!filename) throw new Error("file not DEFIEND (WRONG ARGUMENTS)");
- file = fs.createWriteStream(filename,{ 'flags': 'w+', 'encoding': 'utf-8', 'mode': 0777});
+ file = fs.createWriteStream(filename,{ 'flags': 'w+', /*'encoding': 'utf-8',*/ 'mode': 0777});
  stringify(object,"obj","","this.exports=obj;",file, function() {
     file.end();
     callback();

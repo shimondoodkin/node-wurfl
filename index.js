@@ -32,7 +32,12 @@ function loadxml(callback)
  });
 }this.loadxml=loadxml;
 
-
+function inspect(obj)
+{
+ if(typeof obj!=='object') console.log(require('sys').inspect(obj));
+ else for(var n in obj) console.log(n);
+}
+ 
 function download(callback) // not sure if it works but it is an idea
 {
  var sys   = require('sys'),
@@ -50,9 +55,28 @@ function download(callback) // not sure if it works but it is an idea
 console.log('loading wurfl-latest.xml');
 loadxml(function(){
  console.log('done');
- var persist=require('./persist');
- persist.save(self.data,__dirname+"/wurfl-latest.js",function (){
-   console.log('wurfl-latest.js saved');  
- });
+  var mongodb=require('./mongodb');
+  mongodb.connect("t999_phonespecs",function (collection,db){
+   //inspect(self.data.wurfl.devices);
+   var inflow= require('../node-inflow');
+   var devices=self.data.wurfl.devices.device;
+   
+   inflow.each({},devices,function(device,key)
+   {
+    next=this
+    mongodb.savereplace(collection,{id:device.id},device,function ()
+    {
+     console.log(key);
+     next();
+    });
+   },function(){
+     console.log('mongodb save done');
+     db.close();
+   });
+  });
+  //var persist=require('./persist');
+  //persist.save(self.data,__dirname+"/wurfl-latest.js",function (){
+  //console.log('wurfl-latest.js saved');  
+  //});
 });
 

@@ -1,7 +1,5 @@
-var sys = require('sys');   // allaws to write to application streams (write to log)
-var http = require('http'); // allaws to create http server
-var mongo = require('../node-mongodb-native/lib/mongodb'); 
-
+var mongo = require('../node-mongodb-native/lib/mongodb');
+  
 var app={
  database:{
   //username:"",
@@ -14,8 +12,7 @@ var app={
 }
 
 db = new mongo.Db(app.database.name, new mongo.Server(app.database.host, app.database.port, {}), {});
-db.addListener("error", function(error) { sys.puts("Error connecting to mongo -- perhaps it isn't running?"); process.exit(-1); });
-
+db.addListener("error", function(error) { console.log("Error connecting to mongo -- perhaps it isn't running?"); process.exit(-1); });
 function db_open_auth(callback)
 {
  if(app.database.username)
@@ -37,15 +34,49 @@ function db_open_auth(callback)
  }
 }
 
-db_open_auth(function(p_db)
+function savereplace(collection,search,object,callback)
 {
- console.log("connected to database");
- //db.createCollection('test_insert', function(err, collection) {
- db.collection('test_insert', function(err, collection)
- {
-  collection.insert({a:2}, function(err, docs)
-  {
+ collection.find(search,function (error,cursor){
+  cursor.toArray(function (err, docs){
+    if(docs.length==0)
+    {
+     collection.insert(object,function(err,doc){
+      callback();
+     });
+    }
+    else
+    if(docs.length==1)
+    {
+     object._id=docs[0]._id;
+     collection.save(object,function(err,doc){
+      callback();
+     });
+     //update id and save doc
+    }
+    else
+    {
+     object._id=docs[0]._id; // is ths good?, accidencily copied here, seems yes
+     collection.remove(search,function(err,redoc){
+      collection.save(object,function(err,svdoc){
+       callback();
+       });
+     });
+     // remove all and insert
+    }
   });
  });
- //});
-});
+};this.savereplace=savereplace;
+
+function connect(collectionname,callback)
+{
+ db_open_auth(function(p_db)
+ {
+  console.log("connected to database");
+  //db.createCollection(collectionname, function(err, collection) {
+  db.collection(collectionname, function(err, collection)
+  {
+   callback(collection,db);
+  });
+  //});
+ });
+}this.connect=connect;
